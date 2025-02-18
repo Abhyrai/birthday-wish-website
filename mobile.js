@@ -8,50 +8,59 @@ class MobilePaper {
     this.startY = 0;
     this.offsetX = 0;
     this.offsetY = 0;
+    this.currentX = 0;
+    this.currentY = 0;
 
     this.init();
   }
 
   init() {
-    // Attach touchstart, touchmove, and touchend event listeners
-    this.paper.addEventListener("touchstart", (e) => this.handleTouchStart(e), { passive: false });
-    document.addEventListener("touchmove", (e) => this.handleTouchMove(e), { passive: false });
-    document.addEventListener("touchend", () => this.handleTouchEnd(), { passive: false });
+    // Touch Events for Mobile
+    this.paper.addEventListener("touchstart", (e) => {
+      e.preventDefault(); // Prevent default scrolling behavior
+      this.startDrag(e.touches[0]);
+    });
+    document.addEventListener("touchmove", (e) => {
+      e.preventDefault(); // Prevent default touch move
+      this.onDrag(e.touches[0]);
+    });
+    document.addEventListener("touchend", () => this.endDrag());
   }
 
-  handleTouchStart(e) {
-    e.preventDefault(); // Prevent scrolling while dragging
-
+  startDrag(event) {
     this.isDragging = true;
-    this.paper.style.zIndex = highestZ++; // Bring the paper to the front
 
-    // Record initial touch position
-    const touch = e.touches[0];
-    this.startX = touch.clientX - this.offsetX;
-    this.startY = touch.clientY - this.offsetY;
+    // Bring paper to the front
+    this.paper.style.zIndex = highestZ++;
+    this.startX = event.clientX - this.offsetX;
+    this.startY = event.clientY - this.offsetY;
   }
 
-  handleTouchMove(e) {
+  onDrag(event) {
     if (!this.isDragging) return;
 
-    e.preventDefault(); // Prevent accidental scrolling
+    // Calculate current position
+    this.currentX = event.clientX - this.startX;
+    this.currentY = event.clientY - this.startY;
 
-    // Calculate new position
-    const touch = e.touches[0];
-    const moveX = touch.clientX - this.startX;
-    const moveY = touch.clientY - this.startY;
+    // Boundary check (optional)
+    this.currentX = Math.max(0, Math.min(window.innerWidth - this.paper.offsetWidth, this.currentX));
+    this.currentY = Math.max(0, Math.min(window.innerHeight - this.paper.offsetHeight, this.currentY));
 
-    this.offsetX = moveX;
-    this.offsetY = moveY;
+    // Update offsets
+    this.offsetX = this.currentX;
+    this.offsetY = this.currentY;
 
-    // Apply transform for smooth dragging
-    this.paper.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    // Apply transform for movement
+    this.paper.style.transform = `translate(${this.currentX}px, ${this.currentY}px)`;
   }
 
-  handleTouchEnd() {
-    this.isDragging = false; // Reset dragging state
+  endDrag() {
+    this.isDragging = false;
   }
 }
 
 // Initialize all papers for touch interaction
-document.querySelectorAll(".paper").forEach((paper) => new MobilePaper(paper));
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".paper").forEach((paper) => new MobilePaper(paper));
+});
