@@ -1,5 +1,5 @@
 (() => {
-  let highestZ = 1;
+  let highestZ = 1;  // Declare the variable only once
 
   class MobilePaper {
     constructor(paper) {
@@ -18,11 +18,11 @@
     init() {
       // Touch Events for Mobile
       this.paper.addEventListener("touchstart", (e) => {
-        e.preventDefault(); // Prevent default scrolling behavior
+        e.preventDefault();  // Prevent default scrolling behavior
         this.startDrag(e.touches[0]);
       });
       document.addEventListener("touchmove", (e) => {
-        e.preventDefault(); // Prevent default touch move
+        e.preventDefault();  // Prevent default touch move
         this.onDrag(e.touches[0]);
       });
       document.addEventListener("touchend", () => this.endDrag());
