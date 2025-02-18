@@ -8,42 +8,48 @@ class MobilePaper {
     this.startY = 0;
     this.offsetX = 0;
     this.offsetY = 0;
-    this.currentX = 0;
-    this.currentY = 0;
 
     this.init();
   }
 
   init() {
-    // Touch Events for Mobile
-    this.paper.addEventListener("touchstart", (e) => this.startDrag(e.touches[0]));
-    document.addEventListener("touchmove", (e) => this.onDrag(e.touches[0]));
-    document.addEventListener("touchend", () => this.endDrag());
+    // Attach touchstart, touchmove, and touchend event listeners
+    this.paper.addEventListener("touchstart", (e) => this.handleTouchStart(e), { passive: false });
+    document.addEventListener("touchmove", (e) => this.handleTouchMove(e), { passive: false });
+    document.addEventListener("touchend", () => this.handleTouchEnd(), { passive: false });
   }
 
-  startDrag(event) {
+  handleTouchStart(e) {
+    e.preventDefault(); // Prevent scrolling while dragging
+
     this.isDragging = true;
+    this.paper.style.zIndex = highestZ++; // Bring the paper to the front
 
-    // Bring paper to the front
-    this.paper.style.zIndex = highestZ++;
-    this.startX = event.clientX - this.offsetX;
-    this.startY = event.clientY - this.offsetY;
+    // Record initial touch position
+    const touch = e.touches[0];
+    this.startX = touch.clientX - this.offsetX;
+    this.startY = touch.clientY - this.offsetY;
   }
 
-  onDrag(event) {
+  handleTouchMove(e) {
     if (!this.isDragging) return;
 
-    this.currentX = event.clientX - this.startX;
-    this.currentY = event.clientY - this.startY;
-    this.offsetX = this.currentX;
-    this.offsetY = this.currentY;
+    e.preventDefault(); // Prevent accidental scrolling
 
-    // Apply transform for movement
-    this.paper.style.transform = `translate(${this.currentX}px, ${this.currentY}px)`;
+    // Calculate new position
+    const touch = e.touches[0];
+    const moveX = touch.clientX - this.startX;
+    const moveY = touch.clientY - this.startY;
+
+    this.offsetX = moveX;
+    this.offsetY = moveY;
+
+    // Apply transform for smooth dragging
+    this.paper.style.transform = `translate(${moveX}px, ${moveY}px)`;
   }
 
-  endDrag() {
-    this.isDragging = false;
+  handleTouchEnd() {
+    this.isDragging = false; // Reset dragging state
   }
 }
 
