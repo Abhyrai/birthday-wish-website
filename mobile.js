@@ -16,6 +16,7 @@ class Paper {
   rotating = false;
 
   init(paper) {
+    // Touch move event
     paper.addEventListener('touchmove', (e) => {
       e.preventDefault();
       if (!this.rotating) {
@@ -51,6 +52,7 @@ class Paper {
       }
     });
 
+    // Touch start event
     paper.addEventListener('touchstart', (e) => {
       if (this.holdingPaper) return;
       this.holdingPaper = true;
@@ -64,12 +66,13 @@ class Paper {
       this.prevTouchY = this.touchStartY;
     });
 
+    // Touch end event
     paper.addEventListener('touchend', () => {
       this.holdingPaper = false;
       this.rotating = false;
     });
 
-    // For two-finger rotation on touch screens
+    // Gesture events for rotation (two-finger gesture)
     paper.addEventListener('gesturestart', (e) => {
       e.preventDefault();
       this.rotating = true;
@@ -81,6 +84,7 @@ class Paper {
   }
 }
 
+// Initialize all papers
 const papers = Array.from(document.querySelectorAll('.paper'));
 
 papers.forEach((paper) => {
