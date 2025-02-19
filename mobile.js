@@ -1,43 +1,29 @@
-    paper.addEventListener('touchstart', (e) => {
-      if (this.holdingPaper) return;
-      this.holdingPaper = true;
+let highestZ = 1;
 
-      paper.style.zIndex = highestZ;
-      highestZ += 1;
+class Paper {
+  constructor(paperElement) {
+    this.paperElement = paperElement;
+    this.init();
+  }
 
-      // Get current transform
-      const currentTransform = this.parseTransform(paper);
-      this.currentPaperX = currentTransform.x;
-      this.currentPaperY = currentTransform.y;
-
-      this.touchStartX = e.touches[0].clientX;
-      this.touchStartY = e.touches[0].clientY;
-      this.prevTouchX = this.touchStartX;
-      this.prevTouchY = this.touchStartY;
+  init() {
+    this.paperElement.addEventListener('click', () => {
+      this.moveAside();
     });
+  }
 
-    // Touch end event
-    paper.addEventListener('touchend', () => {
-      this.holdingPaper = false;
-      this.rotating = false;
-    });
+  moveAside() {
+    // Move the paper aside
+    const currentTransform = getComputedStyle(this.paperElement).transform;
+    const matrix = currentTransform === 'none' ? [1, 0, 0, 1, 0, 0] : currentTransform.match(/matrix.*\((.+)\)/)[1].split(', ');
+    const currentX = parseFloat(matrix[4]) || 0; // Get current translateX
+    const newX = currentX + 320; // Move it aside (adjust as needed)
 
-    // Gesture events for rotation (two-finger gesture)
-    paper.addEventListener('gesturestart', (e) => {
-      e.preventDefault();
-      this.rotating = true;
-    });
-
-    paper.addEventListener('gestureend', () => {
-      this.rotating = false;
-    });
+    this.paperElement.style.transform = `translateX(${newX}px)`;
+    this.paperElement.style.zIndex = highestZ; // Bring to front
+    highestZ += 1; // Increment z-index for the next paper
   }
 }
 
 // Initialize all papers
-const papers = Array.from(document.querySelectorAll('.paper'));
-
-papers.forEach((paper) => {
-  const p = new Paper();
-  p.init(paper);
-});
+const papers = Array
