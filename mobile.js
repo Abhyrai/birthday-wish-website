@@ -1,68 +1,89 @@
-(() => {
-  let highestZ = 1;  // Declare the variable only once
+let highestZ = 1;
 
-  class MobilePaper {
-    constructor(paper) {
-      this.paper = paper;
-      this.isDragging = false;
-      this.startX = 0;
-      this.startY = 0;
-      this.offsetX = 0;
-      this.offsetY = 0;
-      this.currentX = 0;
-      this.currentY = 0;
+class Paper {
+  holdingPaper = false;
+  touchStartX = 0;
+  touchStartY = 0;
+  touchMoveX = 0;
+  touchMoveY = 0;
+  prevTouchX = 0;
+  prevTouchY = 0;
+  velX = 0;
+  velY = 0;
+  rotation = Math.random() * 30 - 15;
+  currentPaperX = 0;
+  currentPaperY = 0;
+  rotating = false;
 
-      this.init();
-    }
+  init(paper) {
+    paper.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!this.rotating) {
+        this.touchMoveX = e.touches[0].clientX;
+        this.touchMoveY = e.touches[0].clientY;
 
-    init() {
-      // Touch Events for Mobile
-      this.paper.addEventListener("touchstart", (e) => {
-        e.preventDefault();  // Prevent default scrolling behavior
-        this.startDrag(e.touches[0]);
-      });
-      document.addEventListener("touchmove", (e) => {
-        e.preventDefault();  // Prevent default touch move
-        this.onDrag(e.touches[0]);
-      });
-      document.addEventListener("touchend", () => this.endDrag());
-    }
+        this.velX = this.touchMoveX - this.prevTouchX;
+        this.velY = this.touchMoveY - this.prevTouchY;
+      }
 
-    startDrag(event) {
-      this.isDragging = true;
+      const dirX = e.touches[0].clientX - this.touchStartX;
+      const dirY = e.touches[0].clientY - this.touchStartY;
+      const dirLength = Math.sqrt(dirX * dirX + dirY * dirY);
+      const dirNormalizedX = dirX / dirLength;
+      const dirNormalizedY = dirY / dirLength;
 
-      // Bring paper to the front
-      this.paper.style.zIndex = highestZ++;
-      this.startX = event.clientX - this.offsetX;
-      this.startY = event.clientY - this.offsetY;
-    }
+      const angle = Math.atan2(dirNormalizedY, dirNormalizedX);
+      let degrees = (180 * angle) / Math.PI;
+      degrees = (360 + Math.round(degrees)) % 360;
+      if (this.rotating) {
+        this.rotation = degrees;
+      }
 
-    onDrag(event) {
-      if (!this.isDragging) return;
+      if (this.holdingPaper) {
+        if (!this.rotating) {
+          this.currentPaperX += this.velX;
+          this.currentPaperY += this.velY;
+        }
+        this.prevTouchX = this.touchMoveX;
+        this.prevTouchY = this.touchMoveY;
 
-      // Calculate current position
-      this.currentX = event.clientX - this.startX;
-      this.currentY = event.clientY - this.startY;
+        paper.style.transform = `translateX(${this.currentPaperX}px) translateY(${this.currentPaperY}px) rotateZ(${this.rotation}deg)`;
+      }
+    });
 
-      // Boundary check (optional)
-      this.currentX = Math.max(0, Math.min(window.innerWidth - this.paper.offsetWidth, this.currentX));
-      this.currentY = Math.max(0, Math.min(window.innerHeight - this.paper.offsetHeight, this.currentY));
+    paper.addEventListener('touchstart', (e) => {
+      if (this.holdingPaper) return;
+      this.holdingPaper = true;
 
-      // Update offsets
-      this.offsetX = this.currentX;
-      this.offsetY = this.currentY;
+      paper.style.zIndex = highestZ;
+      highestZ += 1;
 
-      // Apply transform for movement
-      this.paper.style.transform = `translate(${this.currentX}px, ${this.currentY}px)`;
-    }
+      this.touchStartX = e.touches[0].clientX;
+      this.touchStartY = e.touches[0].clientY;
+      this.prevTouchX = this.touchStartX;
+      this.prevTouchY = this.touchStartY;
+    });
 
-    endDrag() {
-      this.isDragging = false;
-    }
+    paper.addEventListener('touchend', () => {
+      this.holdingPaper = false;
+      this.rotating = false;
+    });
+
+    // For two-finger rotation on touch screens
+    paper.addEventListener('gesturestart', (e) => {
+      e.preventDefault();
+      this.rotating = true;
+    });
+
+    paper.addEventListener('gestureend', () => {
+      this.rotating = false;
+    });
   }
+}
 
-  // Initialize all papers for touch interaction
-  document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".paper").forEach((paper) => new MobilePaper(paper));
-  });
-})();
+const papers = Array.from(document.querySelectorAll('.paper'));
+
+papers.forEach((paper) => {
+  const p = new Paper();
+  p.init(paper);
+});
